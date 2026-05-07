@@ -20,32 +20,14 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // ── Google Calendar OAuth ──────────────────────────────────
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 const TOKEN_PATH = "token.json";
-const credentials = JSON.parse(fs.readFileSync("credentials.json"));
+const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 const { client_secret, client_id, redirect_uris } = credentials.installed;
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
 async function getCalendarAuth() {
-  if (fs.existsSync(TOKEN_PATH)) {
-    const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
-    oAuth2Client.setCredentials(token);
-    return oAuth2Client;
-  }
-  // Primera vez: genera el link de autorización
-  const authUrl = oAuth2Client.generateAuthUrl({ access_type: "offline", scope: SCOPES });
-  console.log("\n🔗 Abre este link en tu navegador para autorizar Google Calendar:");
-  console.log(authUrl);
-  console.log("\nDespués pega el código aquí:\n");
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question("Código: ", async (code) => {
-      rl.close();
-      const { tokens } = await oAuth2Client.getToken(code);
-      oAuth2Client.setCredentials(tokens);
-      fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
-      console.log("✅ Google Calendar autorizado y token guardado.");
-      resolve(oAuth2Client);
-    });
-  });
+  const token = JSON.parse(process.env.GOOGLE_TOKEN);
+  oAuth2Client.setCredentials(token);
+  return oAuth2Client;
 }
 
 const MESES = {enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11};
